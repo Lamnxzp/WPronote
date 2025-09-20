@@ -1,0 +1,24 @@
+{
+  "name": "wpronote",
+  "version": "1.0.0",
+  "description": "Alertes pour cours annulés sur Pronote.",
+  "main": "src/main.js",
+  "type": "module",
+  "keywords": [],
+  "author": "Lamnxzp",
+  "license": "MIT-0",
+  "dependencies": {
+    "@inquirer/prompts": "^7.8.6",
+    "dotenv": "^17.2.2",
+    "node-fetch": "^3.3.2",
+    "pawnote": "^1.6.1",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.35.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.4.0",
+    "prettier": "^3.6.2"
+  }
+}
