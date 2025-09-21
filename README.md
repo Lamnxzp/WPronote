@@ -90,6 +90,7 @@ Une fois ce fichier présent, vous pouvez relancer le programme et la connexion 
   - [x] Cours modifiés (changement de professeur, de salle...)
 - [ ] **Notifications**
   - [x] Support API Pushover
+  - [ ] Support API Ntfy
   - [ ] Support API Discord
   - [ ] Support API Telegram
 
