@@ -43,6 +43,8 @@ export const notificationConfig = {
       options: {
         // Priorité du message (1 à 5), voir https://docs.ntfy.sh/publish/?h=priority#message-priority
         priority: 3,
+        // Titre de la notification
+        title: "WPronote",
       },
     },
   },

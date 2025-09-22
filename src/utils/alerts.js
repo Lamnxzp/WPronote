@@ -152,7 +152,7 @@ const sendNtfyMessage = async (message) => {
       body: message,
       headers: {
         Priority: notificationConfig.providers.ntfy.options.priority,
-        Title: "WPronote",
+        Title: notificationConfig.providers.ntfy.options.title,
       },
     });
 
