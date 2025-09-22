@@ -1,8 +1,8 @@
 import "dotenv/config";
 import { Pronote } from "./services/pronote.js";
-import { sendPushoverMessage } from "./utils/pushover.js";
+import { sendPushoverMessage } from "./utils/alerts.js";
 import { logger } from "./utils/logger.js";
-import config from "../config.js";
+import { appConfig } from "../config.js";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -39,5 +39,5 @@ while (true) {
   }
 
   logger.info("En attente de la prochaine vérification...");
-  await sleep(config.checkInterval);
+  await sleep(appConfig.checkInterval);
 }

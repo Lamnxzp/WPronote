@@ -34,3 +34,7 @@ export const translateToWeekNumber = (dateToTranslate, startDay) => {
   );
   return 1 + Math.floor(daysDiff / 7);
 };
+
+export const encodeRFC2047 = (str) => {
+  return "=?UTF-8?B?" + Buffer.from(str, "utf-8").toString("base64") + "?=";
+};
