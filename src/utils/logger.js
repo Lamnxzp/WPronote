@@ -53,7 +53,7 @@ const _log = ({
   console.log(`${timestamp} ${levelLabel} ${prefix} ${message}`);
 
   if (details) {
-    const detailsArray = details.split("\n");
+    const detailsArray = Array.isArray(details) ? details : details.split("\n");
     detailsArray.forEach((detailLine) => {
       console.log(chalk.dim(`      ${detailLine.trim()}`));
     });
