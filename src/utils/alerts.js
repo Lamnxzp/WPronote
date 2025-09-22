@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
 import { logger } from "./logger.js";
-import { notificationConfig } from "../../config.js";
+import { notificationConfig, appConfig } from "../../config.js";
 
 /**
  * Builds an HTML-formatted message for Pushover.
@@ -113,7 +113,7 @@ function buildMessage(alertData, provider) {
   }
 }
 
-export const sendPushoverMessage = async (message) => {
+const sendPushoverMessage = async (message) => {
   try {
     const url = "https://api.pushover.net/1/messages.json";
     const body = new URLSearchParams();
@@ -145,7 +145,7 @@ export const sendPushoverMessage = async (message) => {
   }
 };
 
-export const sendNtfyMessage = async (message) => {
+const sendNtfyMessage = async (message) => {
   try {
     const response = await fetch(notificationConfig.providers.ntfy.url, {
       method: "POST",
@@ -171,7 +171,7 @@ export const sendNtfyMessage = async (message) => {
   }
 };
 
-export const sendAlerts = async (allAlertData) => {
+export const sendCourseAlerts = async (allAlertData) => {
   let sentCount = 0;
   for (const alertData of allAlertData) {
     for (const provider of notificationConfig.enabledProviders) {
@@ -191,4 +191,16 @@ export const sendAlerts = async (allAlertData) => {
     }
   }
   return sentCount;
+};
+
+export const sendStatusAlert = async (message) => {
+  if (!appConfig.enableStatusAlert) {
+    return;
+  }
+  if (notificationConfig.enabledProviders.includes("pushover")) {
+    await sendPushoverMessage(message);
+  }
+  if (notificationConfig.enabledProviders.includes("ntfy")) {
+    await sendNtfyMessage(message);
+  }
 };

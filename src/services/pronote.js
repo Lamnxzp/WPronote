@@ -1,7 +1,7 @@
 import * as pronote from "pawnote";
 import { v4 as uuid } from "uuid";
 import { fileExists, dirExists, translateToWeekNumber } from "../utils.js";
-import { sendAlerts } from "../utils/alerts.js";
+import { sendCourseAlerts } from "../utils/alerts.js";
 import { logger } from "../utils/logger.js";
 import { input } from "@inquirer/prompts";
 import fs from "fs/promises";
@@ -435,7 +435,7 @@ export class Pronote {
     }
 
     if (allAlertsToSend.length > 0) {
-      const sentCount = await sendAlerts(allAlertsToSend);
+      const sentCount = await sendCourseAlerts(allAlertsToSend);
       if (sentCount > 0) {
         logger.success(`${sentCount} notification(s) envoyée(s)`);
       }

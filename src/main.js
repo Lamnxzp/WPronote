@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { Pronote } from "./services/pronote.js";
-import { sendPushoverMessage } from "./utils/alerts.js";
+import { sendStatusAlert } from "./utils/alerts.js";
 import { logger } from "./utils/logger.js";
 import { appConfig } from "../config.js";
 
@@ -20,7 +20,7 @@ while (true) {
     if (isFailing) {
       logger.success("Connecté de nouveau avec succès après une erreur.");
 
-      sendPushoverMessage(
+      sendStatusAlert(
         "[STATUS] Connecté de nouveau avec succès après une erreur."
       );
       isFailing = false;
@@ -32,7 +32,7 @@ while (true) {
     );
     if (!isFailing) {
       isFailing = true;
-      sendPushoverMessage(
+      sendStatusAlert(
         `[STATUS] Une erreur est survenue lors de la vérification: ${error.message}`
       );
     }

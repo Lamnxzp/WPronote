@@ -5,6 +5,8 @@ export const appConfig = {
   // Intervalle entre les vérifications (en millisecondes)
   // Ici 5 minutes : 5 * 60 * 1000 ms
   checkInterval: 5 * 60 * 1000,
+  // Activer/désactiver les alertes de statut
+  enableStatusAlert: true,
 };
 
 // =============================
