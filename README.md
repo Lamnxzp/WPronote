@@ -18,7 +18,7 @@
 
 <h2 id="a-propos">🎯 À propos</h2>
 
-WPronote est une application Node.js qui se connecte automatiquement à votre compte Pronote et vous prévient sur votre téléphone avec des **notifications push** (grâce à [Pushover](https://pushover.net/)) lorsqu’un changement est détecté dans votre emploi du temps.
+WPronote est une application Node.js qui se connecte automatiquement à votre compte Pronote et vous prévient sur votre téléphone avec des **notifications push** (grâce à [Pushover](https://pushover.net/) ou [Ntfy](https://ntfy.sh/)) lorsqu’un changement est détecté dans votre emploi du temps.
 
 Toutes les 5 minutes, le programme vérifie votre emploi du temps et vous envoie une notification dès qu’un de ces changements est détecté :
 
@@ -31,7 +31,9 @@ Toutes les 5 minutes, le programme vérifie votre emploi du temps et vous envoie
 ### 1. Prérequis
 
 - [Node.js](https://nodejs.org/fr/download) 18 ou plus récent
-- Un compte [Pushover](https://pushover.net/) avec une [licence active](https://pushover.net/licensing) _(30 jours gratuits, puis une license à vie de 4,99$)_
+- Et soit :
+  - Un compte [Pushover](https://pushover.net/) avec une [licence active](https://pushover.net/licensing)
+  - L’application [Ntfy](https://ntfy.sh/) installée sur votre téléphone
 
 ### 2. Téléchargement - Installation des dépendances
 
@@ -43,15 +45,36 @@ npm install
 
 ### 3. Configuration
 
-Créez un fichier `.env` à la racine du projet :
+Créez un fichier `config.js` à la racine du projet en copiant `config.example.js` et en le modifiant selon vos besoins. Ce fichier contrôle les services de notification activés.
 
-```env
-# Clés API Pushover
-PUSHOVER_TOKEN=votre_token_application
-PUSHOVER_USER=votre_cle_utilisateur
-```
+#### Pushover (payant)
 
-Pour récupérer vos clés API Pushover, suivez les instructions dans le fichier [docs/pushover.md](docs/pushover.md).
+Pour utiliser Pushover comme service de notification :
+
+1. Créez un compte sur [Pushover](https://pushover.net/).
+2. Créez un fichier `.env` à la racine du projet avec vos clés API :
+   ```env
+   PUSHOVER_USER_KEY=votre_cle_utilisateur
+   PUSHOVER_API_TOKEN=votre_token_application
+   ```
+3. Pour récupérer vos clés API Pushover, suivez les instructions détaillées dans le fichier [docs/pushover.md](docs/pushover.md).
+4. Dans `config.js`, assurez-vous que `"pushover"` est inclus dans la liste `enabledProviders` (par exemple : `enabledProviders: ["pushover"]`).
+
+#### Ntfy (gratuit)
+
+Pour utiliser Ntfy comme service de notification (gratuit et open-source) :
+
+1. Installez l'application [Ntfy](https://ntfy.sh/) sur votre téléphone.
+2. Abonnez-vous à un topic de votre choix (par exemple `mon-topic-wpronote`). Votre URL sera alors `https://ntfy.sh/mon-topic-wpronote`.
+3. Modifiez `config.js` :
+   - Ajoutez `"ntfy"` à la liste `enabledProviders` (par exemple : `enabledProviders: ["ntfy"]`).
+   - Remplacez `"https://ntfy.sh/your-topic-here"` dans `providers.ntfy.url` par l'URL de votre topic (par exemple : `"https://ntfy.sh/mon-topic-wpronote"`).
+   - Ajustez les options comme `priority` et `title` si nécessaire.
+
+> [!TIP]
+> Un topic est public, ce qui signifie que plusieurs personnes peuvent s’y abonner et recevoir vos notifications. Choisissez donc un nom qui ne soit pas trop générique.
+
+Vous pouvez activer plusieurs services en les listant dans `enabledProviders`, par exemple `["pushover", "ntfy"]`.
 
 ### 4. Lancement
 
@@ -90,14 +113,14 @@ Une fois ce fichier présent, vous pouvez relancer le programme et la connexion 
   - [x] Cours modifiés (changement de professeur, de salle...)
 - [ ] **Notifications**
   - [x] Support API Pushover
-  - [ ] Support API Ntfy
+  - [x] Support API Ntfy
   - [ ] Support API Discord
   - [ ] Support API Telegram
 
 <h2 id="securite-et-confidentialite">🔒 Sécurité et confidentialité</h2>
 
 - Les données d’authentification sont stockées **localement** sur votre machine
-- Pour l’envoi des notifications, seules des informations liées aux cours (matière, heure, salle, professeur, etc.) sont transmises à Pushover
+- Pour l’envoi des notifications, seules des informations liées aux cours (matière, heure, salle, professeur, etc.) sont transmises à Pushover ou Ntfy
 - La connexion s’effectue uniquement via les **serveurs officiels de Pronote**, de manière sécurisée
 
 <h2>Remarques</h2>
