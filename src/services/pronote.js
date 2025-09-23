@@ -1,10 +1,9 @@
 import * as pronote from "pawnote";
 import { v4 as uuid } from "uuid";
 import { fileExists, dirExists, translateToWeekNumber } from "../utils.js";
-import { sendPushoverMessage } from "../utils/pushover.js";
+import { sendCourseAlerts } from "../utils/alerts.js";
 import { logger } from "../utils/logger.js";
 import { input } from "@inquirer/prompts";
-import config from "../../config.js";
 import fs from "fs/promises";
 
 const CANCELLED_STATUSES = [
@@ -246,7 +245,7 @@ export class Pronote {
   }
 
   _compareWeekClasses(newClasses, previousClasses) {
-    const messagesToSend = [];
+    const alertsToSend = [];
     const prevLessonMap = new Map(
       previousClasses
         .filter((l) => l.startDate && l.endDate)
@@ -260,8 +259,6 @@ export class Pronote {
         const oldLesson = prevLessonMap.get(key);
 
         if (!oldLesson) return;
-
-        // TODO: check => is: 'activity'
 
         const statusChanged = oldLesson.status !== lesson.status;
         const teacherChanged =
@@ -301,44 +298,58 @@ export class Pronote {
             room: lesson.classrooms[0] ?? "Non spécifiée",
           });
 
-          const message = `<b>Cours annulé !</b> ❌
-- <b>📚 Matière :</b> ${lessonName}
-- <b>🗓️ Date :</b> ${lessonTime}
-- <b>🧑‍🏫 Professeur :</b> ${lesson.teacherNames[0] ?? "Non spécifié"}
-- <b>📍 Salle :</b> ${lesson.classrooms[0] ?? "Non spécifiée"}
-- <b>ℹ️ Motif :</b> ${newStatus}`;
-          messagesToSend.push({ type: "cancelled", message: message.trim() });
+          const alertData = {
+            type: "cancelled",
+            title: "Cours annulé !",
+            icon: "❌",
+            course: {
+              name: lessonName,
+              time: lessonTime,
+              teacher: lesson.teacherNames[0] ?? "Non spécifié",
+              room: lesson.classrooms[0] ?? "Non spécifiée",
+            },
+            reason: newStatus,
+          };
+          alertsToSend.push(alertData);
         } else {
           const changes = [];
           const logChanges = [];
 
           if (statusChanged) {
+            changes.push({
+              field: "Statut",
+              oldValue: oldStatus || "Maintenu",
+              newValue: newStatus || "Maintenu",
+              isRestored: oldCancelled && !newCancelled,
+              icon: oldCancelled && !newCancelled ? "✅" : "ℹ️",
+            });
+
             if (oldCancelled && !newCancelled) {
-              changes.push(
-                `- ✅ <b>Statut :</b> Le cours est maintenant <b>maintenu</b> (était annulé : <code>${oldStatus}</code>)`
-              );
               logChanges.push(`Cours rétabli (était: ${oldStatus})`);
             } else {
-              changes.push(
-                `- ℹ️ <b>Statut :</b> \`${oldStatus || "Maintenu"}\` → \`${newStatus || "Maintenu"}\``
-              );
               logChanges.push(
                 `Statut: ${oldStatus || "Maintenu"} → ${newStatus || "Maintenu"}`
               );
             }
           }
           if (teacherChanged) {
-            changes.push(
-              `- 🧑‍🏫 <b>Professeur :</b> \`${oldLesson.teacherNames[0] || "N/A"}\` → \`${lesson.teacherNames[0] || "N/A"}\``
-            );
+            changes.push({
+              field: "Professeur",
+              oldValue: oldLesson.teacherNames[0] || "N/A",
+              newValue: lesson.teacherNames[0] || "N/A",
+              icon: "🧑‍🏫",
+            });
             logChanges.push(
               `Prof: ${oldLesson.teacherNames[0] || "N/A"} → ${lesson.teacherNames[0] || "N/A"}`
             );
           }
           if (roomChanged) {
-            changes.push(
-              `- 📍 <b>Salle :</b> \`${oldLesson.classrooms[0] || "N/A"}\` → \`${lesson.classrooms[0] || "N/A"}\``
-            );
+            changes.push({
+              field: "Salle",
+              oldValue: oldLesson.classrooms[0] || "N/A",
+              newValue: lesson.classrooms[0] || "N/A",
+              icon: "📍",
+            });
             logChanges.push(
               `Salle: ${oldLesson.classrooms[0] || "N/A"} → ${lesson.classrooms[0] || "N/A"}`
             );
@@ -351,22 +362,25 @@ export class Pronote {
               changes: logChanges,
             });
 
-            const header =
-              oldCancelled && !newCancelled
-                ? "<b>Cours rétabli !</b> ✅"
-                : "<b>Modification du cours !</b> 🔄";
-            const message = `${header}
-- <b>📚 Matière :</b> ${lessonName}
-- <b>🗓️ Date :</b> ${lessonTime}
-
-<b>Détails des changements :</b>
-${changes.join("\n")}`;
-            messagesToSend.push({ type: changeType, message: message.trim() });
+            const alertData = {
+              type: changeType,
+              title:
+                changeType === "restored"
+                  ? "Cours rétabli !"
+                  : "Modification du cours !",
+              icon: changeType === "restored" ? "✅" : "🔄",
+              course: {
+                name: lessonName,
+                time: lessonTime,
+              },
+              changes,
+            };
+            alertsToSend.push(alertData);
           }
         }
       });
 
-    return messagesToSend;
+    return alertsToSend;
   }
 
   async checkTimetableChanges() {
@@ -382,7 +396,7 @@ ${changes.join("\n")}`;
 
     PronoteLogging.logCheckStart(weeksToCheck);
 
-    const allMessagesToSend = [];
+    const allAlertsToSend = [];
 
     for (const weekNumber of weeksToCheck) {
       logger.debug(`Récupération semaine ${weekNumber}...`);
@@ -406,11 +420,11 @@ ${changes.join("\n")}`;
           "Aucune alerte ne sera envoyée"
         );
       } else {
-        const messagesForThisWeek = this._compareWeekClasses(
+        const alertsForThisWeek = this._compareWeekClasses(
           newClasses,
           previousWeekData.classes
         );
-        allMessagesToSend.push(...messagesForThisWeek);
+        allAlertsToSend.push(...alertsForThisWeek);
       }
 
       this._cache.timetable.weeks[weekNumber] = {
@@ -420,14 +434,8 @@ ${changes.join("\n")}`;
       };
     }
 
-    if (allMessagesToSend.length > 0) {
-      let sentCount = 0;
-      for (const { type, message } of allMessagesToSend) {
-        if (config.alerts[type]) {
-          await sendPushoverMessage(message);
-          sentCount++;
-        }
-      }
+    if (allAlertsToSend.length > 0) {
+      const sentCount = await sendCourseAlerts(allAlertsToSend);
       if (sentCount > 0) {
         logger.success(`${sentCount} notification(s) envoyée(s)`);
       }
@@ -447,7 +455,7 @@ ${changes.join("\n")}`;
       }
     }
 
-    PronoteLogging.logCheckEnd(allMessagesToSend.length);
+    PronoteLogging.logCheckEnd(allAlertsToSend.length);
 
     await writeCache(this._cache, {
       lastUpdate: new Date().toISOString(),

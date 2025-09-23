@@ -8,4 +8,4 @@
 4. Configurez votre application comme vous le souhaitez puis cliquez sur "Create Application".
 5. Vous serez ensuite redirigé vers la page de votre application. Sur cette page, vous trouverez votre **clé d'application (API Token)**.
    <img src="/assets/pushover/screenshot3.png" alt="API Key"/>
-6. Ajoutez ensuite votre clé utilisateur `PUSHOVER_USER` et votre clé d'application `PUSHOVER_TOKEN` dans votre fichier `.env`.
+6. Ajoutez ensuite votre clé utilisateur `PUSHOVER_USER_KEY` et votre clé d'application `PUSHOVER_API_TOKEN` dans votre fichier `.env`.
