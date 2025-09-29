@@ -113,7 +113,10 @@ function buildMessage(alertData, provider) {
   }
 }
 
-const sendPushoverMessage = async (message) => {
+const sendPushoverMessage = async (
+  message,
+  priority = notificationConfig.providers.pushover.options.priority
+) => {
   try {
     const url = "https://api.pushover.net/1/messages.json";
     const body = new URLSearchParams();
@@ -126,6 +129,7 @@ const sendPushoverMessage = async (message) => {
       notificationConfig.providers.pushover.credentials.userKey
     );
     body.append("message", message);
+    body.append("priority", priority);
     body.append("html", "1");
 
     const response = await fetch(url, { method: "POST", body });
@@ -145,13 +149,16 @@ const sendPushoverMessage = async (message) => {
   }
 };
 
-const sendNtfyMessage = async (message) => {
+const sendNtfyMessage = async (
+  message,
+  priority = notificationConfig.providers.ntfy.options.priority
+) => {
   try {
     const response = await fetch(notificationConfig.providers.ntfy.url, {
       method: "POST",
       body: message,
       headers: {
-        Priority: notificationConfig.providers.ntfy.options.priority,
+        Priority: priority,
         Title: notificationConfig.providers.ntfy.options.title,
       },
     });
@@ -198,9 +205,9 @@ export const sendStatusAlert = async (message) => {
     return;
   }
   if (notificationConfig.enabledProviders.includes("pushover")) {
-    await sendPushoverMessage(message);
+    await sendPushoverMessage(message, -1); // Notification with no sound or vibration
   }
   if (notificationConfig.enabledProviders.includes("ntfy")) {
-    await sendNtfyMessage(message);
+    await sendNtfyMessage(message, 1); // Low priority notification
   }
 };
