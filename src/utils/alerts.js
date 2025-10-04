@@ -247,9 +247,9 @@ export const sendStatusAlert = async (message) => {
     return;
   }
   if (notificationConfig.enabledProviders.includes("pushover")) {
-    await sendPushoverMessage(message, -1); // Notification with no sound or vibration
+    await sendPushoverMessage(message, -2); // No notification, see https://pushover.net/api#priority
   }
   if (notificationConfig.enabledProviders.includes("ntfy")) {
-    await sendNtfyMessage(message, 1); // Low priority notification
+    await sendNtfyMessage(message, 1); // Min priority, see https://docs.ntfy.sh/publish/#message-priority
   }
 };
