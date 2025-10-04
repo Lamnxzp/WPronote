@@ -244,6 +244,76 @@ export class Pronote {
     );
   }
 
+  _getImpact(newClasses, cancelledLesson) {
+    const coursesForDay = newClasses.filter(
+      (c) =>
+        c.startDate?.toDateString() === cancelledLesson.startDate.toDateString()
+    );
+
+    const hasBefore = coursesForDay.some(
+      (c) => c.startDate < cancelledLesson.startDate && !isCancelled(c.status)
+    );
+    const hasAfter = coursesForDay.some(
+      (c) => c.startDate > cancelledLesson.startDate && !isCancelled(c.status)
+    );
+
+    if (!hasBefore && !hasAfter) {
+      return {
+        type: "whole-day",
+      };
+    } else if (!hasBefore) {
+      // Find the next course after the cancelled lesson
+      const nextCourse = coursesForDay
+        .filter(
+          (c) =>
+            c.startDate > cancelledLesson.startDate && !isCancelled(c.status)
+        )
+        .sort((a, b) => a.startDate - b.startDate)[0];
+      return {
+        type: "late-start",
+        startTime: `${nextCourse.startDate.getHours().toString().padStart(2, "0")}h${nextCourse.startDate
+          .getMinutes()
+          .toString()
+          .padStart(2, "0")}`,
+        oldStartTime: `${cancelledLesson.startDate.getHours().toString().padStart(2, "0")}h${cancelledLesson.startDate
+          .getMinutes()
+          .toString()
+          .padStart(2, "0")}`,
+      };
+    } else if (!hasAfter) {
+      // Find the previous course before the cancelled lesson
+      const prevCourse = coursesForDay
+        .filter(
+          (c) =>
+            c.startDate < cancelledLesson.startDate && !isCancelled(c.status)
+        )
+        .sort((a, b) => b.startDate - a.startDate)[0];
+      return {
+        type: "early-finish",
+        endTime: `${prevCourse.endDate.getHours().toString().padStart(2, "0")}h${prevCourse.endDate
+          .getMinutes()
+          .toString()
+          .padStart(2, "0")}`,
+        oldEndTime: `${cancelledLesson.endDate.getHours().toString().padStart(2, "0")}h${cancelledLesson.endDate
+          .getMinutes()
+          .toString()
+          .padStart(2, "0")}`,
+      };
+    } else {
+      return {
+        type: "mid-day-cancel",
+        startTime: `${cancelledLesson.startDate.getHours().toString().padStart(2, "0")}h${cancelledLesson.startDate
+          .getMinutes()
+          .toString()
+          .padStart(2, "0")}`,
+        endTime: `${cancelledLesson.endDate.getHours().toString().padStart(2, "0")}h${cancelledLesson.endDate
+          .getMinutes()
+          .toString()
+          .padStart(2, "0")}`,
+      };
+    }
+  }
+
   _compareWeekClasses(newClasses, previousClasses) {
     const alertsToSend = [];
     const prevLessonMap = new Map(
@@ -309,6 +379,7 @@ export class Pronote {
               room: lesson.classrooms[0] ?? "Non spécifiée",
             },
             reason: newStatus,
+            impact: this._getImpact(newClasses, lesson),
           };
           alertsToSend.push(alertData);
         } else {
