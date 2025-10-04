@@ -28,6 +28,27 @@ function buildPushoverMessage(alertData) {
     messageLines.push(`- ${bold("ℹ️ Motif :")} ${alertData.reason}`);
   }
 
+  if (alertData.type === "cancelled" && alertData.impact) {
+    messageLines.push("");
+    if (alertData.impact.type === "whole-day") {
+      messageLines.push(
+        `❌ Vous n'aurez finalement aucun cours de la journée.`
+      );
+    } else if (alertData.impact.type === "late-start") {
+      messageLines.push(
+        `📌 Vous commencerez donc les cours à ${alertData.impact.startTime} au lieu de ${alertData.impact.oldStartTime}.`
+      );
+    } else if (alertData.impact.type === "early-finish") {
+      messageLines.push(
+        `✨ Vous terminerez donc les cours à ${alertData.impact.endTime} au lieu de ${alertData.impact.oldEndTime}.`
+      );
+    } else if (alertData.impact.type === "mid-day-cancel") {
+      messageLines.push(
+        `🪑 Vous serez en permanence de ${alertData.impact.startTime} à ${alertData.impact.endTime}.`
+      );
+    }
+  }
+
   if (
     (alertData.type === "modified" || alertData.type === "restored") &&
     alertData.changes?.length > 0
@@ -71,6 +92,27 @@ function buildNtfyMessage(alertData) {
 
   if (alertData.type === "cancelled" && alertData.reason) {
     messageLines.push(`- ℹ️ Motif : ${alertData.reason}`);
+  }
+
+  if (alertData.type === "cancelled" && alertData.impact) {
+    messageLines.push("");
+    if (alertData.impact.type === "whole-day") {
+      messageLines.push(
+        `❌ Vous n'aurez finalement aucun cours de la journée.`
+      );
+    } else if (alertData.impact.type === "late-start") {
+      messageLines.push(
+        `📌 Vous commencerez donc les cours à ${alertData.impact.startTime} au lieu de ${alertData.impact.oldStartTime}.`
+      );
+    } else if (alertData.impact.type === "early-finish") {
+      messageLines.push(
+        `✨ Vous terminerez donc les cours à ${alertData.impact.endTime} au lieu de ${alertData.impact.oldEndTime}.`
+      );
+    } else if (alertData.impact.type === "mid-day-cancel") {
+      messageLines.push(
+        `🪑 Vous serez en permanence de ${alertData.impact.startTime} à ${alertData.impact.endTime}.`
+      );
+    }
   }
 
   if (
