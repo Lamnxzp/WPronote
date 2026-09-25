@@ -48,6 +48,8 @@ pnpm install
 
 Créez un fichier `config.js` à la racine du projet en copiant `config.example.js` et en le modifiant selon vos besoins. Ce fichier contrôle les services de notification activés.
 
+Créez aussi un fichier `.env` à la racine du projet pour y mettre vos clés Pushover et/ou l'URL de votre topic ntfy, selon les services utilisés. Les exemples ci-dessous indiquent quoi y copier.
+
 #### Pushover (payant)
 
 Pour utiliser Pushover comme service de notification :
@@ -69,8 +71,11 @@ Pour utiliser Ntfy comme service de notification (gratuit et open-source) :
 2. Abonnez-vous à un topic de votre choix (par exemple `mon-topic-wpronote`). Votre URL sera alors `https://ntfy.sh/mon-topic-wpronote`.
 3. Modifiez `config.js` :
    - Ajoutez `"ntfy"` à la liste `enabledProviders` (par exemple : `enabledProviders: ["ntfy"]`).
-   - Remplacez `"https://ntfy.sh/your-topic-here"` dans `providers.ntfy.url` par l'URL de votre topic (par exemple : `"https://ntfy.sh/mon-topic-wpronote"`).
    - Ajustez les options comme `priority` et `title` si nécessaire.
+4. Ajoutez l'URL du topic dans `.env` :
+   ```env
+   NTFY_URL=https://ntfy.sh/mon-topic-wpronote
+   ```
 
 > [!TIP]
 > Un topic est public, ce qui signifie que plusieurs personnes peuvent s’y abonner et recevoir vos notifications. Choisissez donc un nom qui ne soit pas trop générique.

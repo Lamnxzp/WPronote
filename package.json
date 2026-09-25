@@ -16,11 +16,7 @@
   "packageManager": "pnpm@10.26.1",
   "dependencies": {
     "@blockshub/pawnote-lts": "^1.6.4",
-    "@inquirer/prompts": "^8.4.2",
-    "chalk": "^5.6.2",
-    "dotenv": "^17.4.2",
-    "node-fetch": "^3.3.2",
-    "uuid": "^14.0.0"
+    "@inquirer/prompts": "^8.4.2"
   },
   "devDependencies": {
     "oxfmt": "^0.70.0",

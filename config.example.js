@@ -23,10 +23,6 @@ export const notificationConfig = {
     // Pushover
     // -----------------------------
     pushover: {
-      credentials: {
-        userKey: process.env.PUSHOVER_USER_KEY,
-        apiToken: process.env.PUSHOVER_API_TOKEN,
-      },
       options: {
         // Priorité du message (-2 à 2)
         priority: 0,
@@ -37,9 +33,6 @@ export const notificationConfig = {
     // NTFY
     // -----------------------------
     ntfy: {
-      // URL de votre topic NTFY
-      // Modifiez cette URL pour qu'elle corresponde à votre propre topic
-      url: "https://ntfy.sh/your-topic-here",
       options: {
         // Priorité du message (1 à 5), voir https://docs.ntfy.sh/publish/?h=priority#message-priority
         priority: 3,

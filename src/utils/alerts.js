@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import { logger } from "./logger.js";
 import { notificationConfig, appConfig } from "../../config.js";
 
@@ -162,14 +161,8 @@ const sendPushoverMessage = async (
   try {
     const url = "https://api.pushover.net/1/messages.json";
     const body = new URLSearchParams();
-    body.append(
-      "token",
-      notificationConfig.providers.pushover.credentials.apiToken
-    );
-    body.append(
-      "user",
-      notificationConfig.providers.pushover.credentials.userKey
-    );
+    body.append("token", process.env.PUSHOVER_API_TOKEN);
+    body.append("user", process.env.PUSHOVER_USER_KEY);
     body.append("message", message);
     body.append("priority", priority);
     body.append("html", "1");
@@ -196,7 +189,7 @@ const sendNtfyMessage = async (
   priority = notificationConfig.providers.ntfy.options.priority
 ) => {
   try {
-    const response = await fetch(notificationConfig.providers.ntfy.url, {
+    const response = await fetch(process.env.NTFY_URL, {
       method: "POST",
       body: message,
       headers: {

@@ -1,16 +1,17 @@
-import chalk from "chalk";
+import { styleText } from "node:util";
 
-// Color mapping to access chalk functions by string name
-const chalkColors = {
-  blue: chalk.blue,
-  green: chalk.green,
-  yellow: chalk.yellow,
-  red: chalk.red,
-  gray: chalk.gray,
-  cyan: chalk.cyan,
-  dim: chalk.dim,
-  white: chalk.white,
-};
+const COLORS = [
+  "blue",
+  "green",
+  "yellow",
+  "red",
+  "gray",
+  "cyan",
+  "dim",
+  "white",
+];
+const colorize = (color, text) =>
+  styleText(COLORS.includes(color) ? color : "white", text);
 
 // Standard log levels
 const LOG_LEVELS = {
@@ -46,16 +47,15 @@ const _log = ({
   prefix = "",
   details = null,
 }) => {
-  const colorFn = chalkColors[color] || chalk.white;
-  const timestamp = chalk.dim(`[${getTimestamp()}]`);
-  const levelLabel = colorFn(`[${label}]`);
+  const timestamp = styleText("dim", `[${getTimestamp()}]`);
+  const levelLabel = colorize(color, `[${label}]`);
 
   console.log(`${timestamp} ${levelLabel} ${prefix} ${message}`);
 
   if (details) {
     const detailsArray = Array.isArray(details) ? details : details.split("\n");
     detailsArray.forEach((detailLine) => {
-      console.log(chalk.dim(`      ${detailLine.trim()}`));
+      console.log(styleText("dim", `      ${detailLine.trim()}`));
     });
   }
 };
@@ -84,9 +84,8 @@ export const logger = {
    * @param {string|string[]} [options.details] - Additional details.
    */
   custom: ({ label, message, color, prefix, details }) => {
-    const colorFn = chalkColors[color] || chalk.white;
     // The message itself is also colored
-    const coloredMessage = colorFn(message);
+    const coloredMessage = colorize(color, message);
     _log({ label, message: coloredMessage, color, prefix, details });
   },
 
@@ -96,7 +95,6 @@ export const logger = {
    * @param {string} [color] - The name of the color to use.
    */
   raw: (message, color = null) => {
-    const colorFn = color ? chalkColors[color] || chalk.white : (msg) => msg;
-    console.log(colorFn(message));
+    console.log(color ? colorize(color, message) : message);
   },
 };

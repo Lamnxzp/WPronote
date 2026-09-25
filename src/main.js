@@ -1,8 +1,13 @@
-import "dotenv/config";
 import { Pronote } from "./services/pronote.js";
 import { sendStatusAlert } from "./utils/alerts.js";
 import { logger } from "./utils/logger.js";
 import { appConfig } from "../config.js";
+
+try {
+  process.loadEnvFile();
+} catch (error) {
+  if (error.code !== "ENOENT") throw error;
+}
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 

@@ -1,5 +1,5 @@
 import * as pronote from "@blockshub/pawnote-lts";
-import { v4 as uuid } from "uuid";
+import { randomUUID } from "node:crypto";
 import { fileExists, dirExists, translateToWeekNumber } from "../utils.js";
 import { sendCourseAlerts } from "../utils/alerts.js";
 import { logger } from "../utils/logger.js";
@@ -205,7 +205,7 @@ export class Pronote {
         const qrDataJson = JSON.parse(qrData);
 
         const handle = pronote.createSessionHandle();
-        const deviceUUID = uuid();
+        const deviceUUID = randomUUID();
 
         const refresh = await pronote.loginQrCode(handle, {
           deviceUUID: deviceUUID,
