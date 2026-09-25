@@ -1,4 +1,4 @@
-import * as pronote from "pawnote";
+import * as pronote from "@blockshub/pawnote-lts";
 import { v4 as uuid } from "uuid";
 import { fileExists, dirExists, translateToWeekNumber } from "../utils.js";
 import { sendCourseAlerts } from "../utils/alerts.js";
@@ -85,6 +85,9 @@ export class Pronote {
     this._session = null;
     this._cache = null;
     this._headless = headless;
+    this._sessionData = null;
+    this._loginPromise = null;
+    this._presenceTimer = null;
   }
 
   async init() {
@@ -120,18 +123,30 @@ export class Pronote {
   }
 
   async login() {
-    let sessionData = await this._loadSessionData();
+    if (this._session) return;
+    if (!this._loginPromise) {
+      this._loginPromise = this._login().finally(() => {
+        this._loginPromise = null;
+      });
+    }
+    await this._loginPromise;
+  }
+
+  async _login() {
+    const sessionData = this._sessionData ?? (await this._loadSessionData());
 
     if (!sessionData?.token) {
       if (!this._headless) {
         logger.warning("Aucun token trouvé, authentification nécessaire");
-        sessionData = await this._authenticateWithQRCode();
+        await this._authenticateWithQRCode();
       } else {
         throw new Error("Aucun token trouvé et mode headless activé");
       }
+    } else {
+      await this._establishSession(sessionData);
     }
 
-    await this._establishSession(sessionData);
+    this._schedulePresence(this._session);
 
     logger.success("Connexion Pronote réussie");
     logger.info(
@@ -209,6 +224,9 @@ export class Pronote {
           "utf8"
         );
 
+        this._sessionData = sessionData;
+        this._session = handle;
+
         logger.success("Authentification QR Code réussie");
         return sessionData;
       } catch (error) {
@@ -227,21 +245,87 @@ export class Pronote {
   }
 
   async _establishSession(sessionData) {
-    this._session = pronote.createSessionHandle();
-    const refresh = await pronote.loginToken(this._session, {
-      kind: sessionData.kind,
-      url: sessionData.url,
-      username: sessionData.username,
-      token: sessionData.token,
-      deviceUUID: sessionData.deviceUUID,
-    });
+    const session = pronote.createSessionHandle();
+    const refresh = await pronote.loginToken(session, sessionData);
 
-    sessionData.token = refresh.token;
-    await fs.writeFile(
-      "./cache/pronote_session.json",
-      JSON.stringify(sessionData, null, 2),
-      "utf8"
-    );
+    // Keep the rotated credentials even if writing the cache fails.
+    this._sessionData = { ...sessionData, ...refresh };
+    this._session = session;
+    try {
+      await fs.writeFile(
+        "./cache/pronote_session.json",
+        JSON.stringify(this._sessionData, null, 2),
+        "utf8"
+      );
+    } catch (error) {
+      logger.warning(
+        "Token non sauvegardé : la session reste active, mais un nouveau QR Code pourra être nécessaire au redémarrage.",
+        error.message
+      );
+    }
+  }
+
+  _invalidateSession(session) {
+    if (this._session !== session) return;
+    clearTimeout(this._presenceTimer);
+    this._presenceTimer = null;
+    this._session = null;
+  }
+
+  _schedulePresence(session) {
+    clearTimeout(this._presenceTimer);
+    // The library's startPresenceInterval ignores rejected promises. Schedule
+    // the next ping only after this one finishes, so slow requests cannot pile up.
+    this._presenceTimer = setTimeout(async () => {
+      if (this._session !== session) return;
+      try {
+        await pronote.presence(session);
+      } catch (error) {
+        if (this._session === session) {
+          this._invalidateSession(session);
+          logger.warning(
+            "Session Pronote interrompue, reconnexion à la prochaine vérification.",
+            error.message
+          );
+        }
+        return;
+      }
+      if (this._session === session) this._schedulePresence(session);
+    }, 120_000);
+    this._presenceTimer.unref();
+  }
+
+  _requireSession() {
+    if (!this._session) {
+      throw new Error(
+        "Session Pronote absente : appelez login() avant la vérification."
+      );
+    }
+    return this._session;
+  }
+
+  async _getTimetable(weekNumber, retry = true) {
+    const session = this._requireSession();
+    let timetable;
+    try {
+      timetable = await pronote.timetableFromWeek(session, weekNumber);
+    } catch (error) {
+      // A failed request can also desynchronise the library's request counter.
+      // Discard that handle; only expiration warrants an immediate retry.
+      this._invalidateSession(session);
+      if (retry && error instanceof pronote.SessionExpiredError) {
+        logger.warning("Session Pronote expirée, reconnexion...");
+        await this.login();
+        return this._getTimetable(weekNumber, false);
+      }
+      throw error;
+    }
+    pronote.parseTimetable(session, timetable, {
+      withSuperposedCanceledClasses: false,
+      withCanceledClasses: true,
+      withPlannedClasses: true,
+    });
+    return timetable;
   }
 
   _getImpact(newClasses, cancelledLesson) {
@@ -455,9 +539,10 @@ export class Pronote {
   }
 
   async checkTimetableChanges() {
+    const session = this._requireSession();
     const currentWeekNumber = translateToWeekNumber(
       new Date(),
-      this._session.instance.firstMonday
+      session.instance.firstMonday
     );
     const weeksToCheck = [
       currentWeekNumber,
@@ -468,19 +553,12 @@ export class Pronote {
     PronoteLogging.logCheckStart(weeksToCheck);
 
     const allAlertsToSend = [];
+    const updatedWeeks = { ...this._cache.timetable.weeks };
 
     for (const weekNumber of weeksToCheck) {
       logger.debug(`Récupération semaine ${weekNumber}...`);
 
-      const timetable = await pronote.timetableFromWeek(
-        this._session,
-        weekNumber
-      );
-      pronote.parseTimetable(this._session, timetable, {
-        withSuperposedCanceledClasses: false,
-        withCanceledClasses: true,
-        withPlannedClasses: true,
-      });
+      const timetable = await this._getTimetable(weekNumber);
 
       const newClasses = timetable.classes;
       const previousWeekData = this._cache.timetable.weeks[weekNumber];
@@ -498,12 +576,16 @@ export class Pronote {
         allAlertsToSend.push(...alertsForThisWeek);
       }
 
-      this._cache.timetable.weeks[weekNumber] = {
+      updatedWeeks[weekNumber] = {
         weekNumber: weekNumber,
         lastFetch: new Date().toISOString(),
         classes: newClasses,
       };
     }
+
+    // Keep the previous snapshot if any week fails, so its pending alerts are
+    // still detected on the next successful check.
+    this._cache.timetable.weeks = updatedWeeks;
 
     if (allAlertsToSend.length > 0) {
       const sentCount = await sendCourseAlerts(allAlertsToSend);

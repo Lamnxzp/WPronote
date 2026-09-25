@@ -150,7 +150,7 @@ function buildMessage(alertData, provider) {
     case "ntfy":
       return buildNtfyMessage(alertData);
     default:
-      logger.warn(`Unknown provider "${provider}", cannot build message.`);
+      logger.warning(`Unknown provider "${provider}", cannot build message.`);
       return null;
   }
 }
