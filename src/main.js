@@ -13,7 +13,7 @@ let isFailing = false;
 
 while (true) {
   try {
-    // TODO: Use a way to not relogin every time by keeping the session alive
+    // Réutilise la session existante, ou se reconnecte si elle a été invalidée.
     await instance.login();
     await instance.checkTimetableChanges();
 

@@ -31,6 +31,7 @@ Toutes les 5 minutes, le programme vérifie votre emploi du temps et vous envoie
 ### 1. Prérequis
 
 - [Node.js](https://nodejs.org/fr/download) 18 ou plus récent
+- [pnpm](https://pnpm.io/fr/installation)
 - Et soit :
   - Un compte [Pushover](https://pushover.net/) avec une [licence active](https://pushover.net/licensing)
   - L’application [Ntfy](https://ntfy.sh/) installée sur votre téléphone
@@ -40,7 +41,7 @@ Toutes les 5 minutes, le programme vérifie votre emploi du temps et vous envoie
 ```bash
 git clone https://github.com/Lamnxzp/WPronote.git
 cd WPronote
-npm install
+pnpm install
 ```
 
 ### 3. Configuration
