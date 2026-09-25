@@ -250,12 +250,19 @@ export class Pronote {
 
     // Keep the rotated credentials even if writing the cache fails.
     this._sessionData = { ...sessionData, ...refresh };
-    await fs.writeFile(
-      "./cache/pronote_session.json",
-      JSON.stringify(this._sessionData, null, 2),
-      "utf8"
-    );
     this._session = session;
+    try {
+      await fs.writeFile(
+        "./cache/pronote_session.json",
+        JSON.stringify(this._sessionData, null, 2),
+        "utf8"
+      );
+    } catch (error) {
+      logger.warning(
+        "Token non sauvegardé : la session reste active, mais un nouveau QR Code pourra être nécessaire au redémarrage.",
+        error.message
+      );
+    }
   }
 
   _invalidateSession(session) {
