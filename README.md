@@ -8,7 +8,7 @@
   <b><a href="#installation">Installation</a></b> | 
   <b><a href="#roadmap">Roadmap</a></b>
   <br/><br/>
-  <a href="https://nodejs.org/"><img alt="Node.js" src="https://img.shields.io/badge/Node.js-18+-339933?style=flat&logo=node.js&logoColor=white"></a>
+  <a href="https://nodejs.org/"><img alt="Node.js" src="https://img.shields.io/badge/Node.js-22.13+-339933?style=flat&logo=node.js&logoColor=white"></a>
   <img alt="ESM" src="https://img.shields.io/badge/ESM-Module-4FC08D?style=flat">
   <br/><br/>
   <img src="/assets/screenshot.png" alt="WPronote" width="90%"/>
@@ -30,7 +30,7 @@ Toutes les 5 minutes, le programme vérifie votre emploi du temps et vous envoie
 
 ### 1. Prérequis
 
-- [Node.js](https://nodejs.org/fr/download) 18 ou plus récent
+- [Node.js](https://nodejs.org/fr/download) 22.13 ou plus récent
 - [pnpm](https://pnpm.io/fr/installation)
 - Et soit :
   - Un compte [Pushover](https://pushover.net/) avec une [licence active](https://pushover.net/licensing)
@@ -105,6 +105,19 @@ Une fois ce fichier présent, vous pouvez relancer le programme et la connexion 
 
 > [!NOTE]
 > L'authentification via un ENT ou avec ses identifiants Pronote n'est pas supportée. Seule l'authentification par QR Code est disponible.
+
+## Développement
+
+Le projet utilise [Oxlint](https://oxc.rs/docs/guide/usage/linter) pour vérifier le code et [Oxfmt](https://oxc.rs/docs/guide/usage/formatter) pour le formater.
+
+```bash
+pnpm lint          # Vérifier le code
+pnpm lint:fix      # Appliquer les corrections automatiques
+pnpm format        # Formater les fichiers
+pnpm format:check  # Vérifier le formatage sans modifier les fichiers
+```
+
+Ces vérifications sont aussi exécutées dans GitHub Actions. Pour VS Code, utilisez l'extension [Oxc](https://marketplace.visualstudio.com/items?itemName=oxc.oxc-vscode).
 
 <h2 id="roadmap">🚀 Roadmap</h2>
 
