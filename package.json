@@ -19,7 +19,7 @@
     "@inquirer/prompts": "^8.4.2"
   },
   "devDependencies": {
-    "oxfmt": "^0.70.0",
+    "oxfmt": "^0.71.0",
     "oxlint": "^1.85.0"
   }
 }
