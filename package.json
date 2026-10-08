@@ -16,7 +16,7 @@
   "packageManager": "pnpm@10.26.1",
   "dependencies": {
     "@blockshub/pawnote-lts": "^1.6.4",
-    "@inquirer/prompts": "^8.4.2"
+    "@inquirer/prompts": "^8.7.3"
   },
   "devDependencies": {
     "oxfmt": "^0.70.0",
